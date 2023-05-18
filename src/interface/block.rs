@@ -4,14 +4,16 @@ use sealed::sealed;
 
 use crate::{
     gl,
-    sl::{self, program_def::VertexAttributeDef},
-    Gl, Sl,
+    sl::{self, program_def::VertexAttributeDef, ToSl},
+    Gl, Sl, ToGl,
 };
+
+use super::math::MathDom;
 
 /// A view of block attributes.
 ///
 /// See [`Block`] for more details.
-#[sealed]
+#[sealed(pub(crate))]
 pub trait BlockDom: Copy {
     /// A floating-point value.
     ///
@@ -209,6 +211,8 @@ pub unsafe trait Block<D: BlockDom>: sl::ToSl {
     /// This is the type through which shaders access block data.
     type Sl: Block<Sl> + sl::Varying + sl::ToSl<Output = Self::Sl>;
 
+    type Math<M: MathDom>: ToGl<Output = Self::Gl>;
+
     #[doc(hidden)]
     fn uniform_input(_path: &str) -> Self {
         unimplemented!()
@@ -226,15 +230,17 @@ pub unsafe trait Block<D: BlockDom>: sl::ToSl {
 }
 
 macro_rules! impl_block {
-    ($gl:ty, $sl:ty) => {
+    ($gl:ty, $ty:ident) => {
         unsafe impl Block<Gl> for $gl {
             type Gl = $gl;
-            type Sl = $sl;
+            type Sl = sl::$ty;
+            type Math<M: MathDom> = <M as MathDom>::$ty;
         }
 
-        unsafe impl Block<Sl> for $sl {
+        unsafe impl Block<Sl> for sl::$ty {
             type Gl = $gl;
-            type Sl = $sl;
+            type Sl = sl::$ty;
+            type Math<M: MathDom> = <M as MathDom>::$ty;
 
             fn uniform_input(path: &str) -> Self {
                 <Self as sl::Object>::from_arg(path)
@@ -256,18 +262,18 @@ macro_rules! impl_block {
     };
 }
 
-impl_block!(f32, sl::F32);
-impl_block!(i32, sl::I32);
-impl_block!(u32, sl::U32);
-impl_block!(gl::Vec2, sl::Vec2);
-impl_block!(gl::Vec3, sl::Vec3);
-impl_block!(gl::Vec4, sl::Vec4);
-impl_block!(gl::IVec2, sl::IVec2);
-impl_block!(gl::IVec3, sl::IVec3);
-impl_block!(gl::IVec4, sl::IVec4);
-impl_block!(gl::UVec2, sl::UVec2);
-impl_block!(gl::UVec3, sl::UVec3);
-impl_block!(gl::UVec4, sl::UVec4);
-impl_block!(gl::Mat2, sl::Mat2);
-impl_block!(gl::Mat3, sl::Mat3);
-impl_block!(gl::Mat4, sl::Mat4);
+impl_block!(f32, F32);
+impl_block!(i32, I32);
+impl_block!(u32, U32);
+impl_block!(gl::Vec2, Vec2);
+impl_block!(gl::Vec3, Vec3);
+impl_block!(gl::Vec4, Vec4);
+impl_block!(gl::IVec2, IVec2);
+impl_block!(gl::IVec3, IVec3);
+impl_block!(gl::IVec4, IVec4);
+impl_block!(gl::UVec2, UVec2);
+impl_block!(gl::UVec3, UVec3);
+impl_block!(gl::UVec4, UVec4);
+impl_block!(gl::Mat2, Mat2);
+impl_block!(gl::Mat3, Mat3);
+impl_block!(gl::Mat4, Mat4);

@@ -5,7 +5,7 @@ pub mod gl;
 pub mod sl;
 
 pub use interface::{
-    Block, BlockDom, FsInterface, FsInterfaceDom, UniformInterface, UniformInterfaceDom,
+    Block, BlockDom, FsInterface, FsInterfaceDom, MathDom, UniformInterface, UniformInterfaceDom,
     UniformNonUnit, UniformUnion, VsInterface, VsInterfaceDom,
 };
 
@@ -19,6 +19,11 @@ pub use glow;
 #[cfg(feature = "mint")]
 pub use mint;
 
+use bytemuck::Pod;
+use crevice::std140::AsStd140;
+
+use sl::ToSl;
+
 /// The graphics library's view of shader inputs and outputs.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Gl;
@@ -26,6 +31,37 @@ pub struct Gl;
 /// The shading language's view of shader inputs and outputs.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Sl;
+
+pub trait ToGl {
+    // FIXME: Consider adding a `Block<Gl, Gl = Self::Output>` requirement here.
+    type Output: Copy + Pod + AsStd140 + ToSl;
+
+    fn to_gl(self) -> Self::Output;
+}
+
+impl ToGl for f32 {
+    type Output = f32;
+
+    fn to_gl(self) -> Self::Output {
+        self
+    }
+}
+
+impl ToGl for i32 {
+    type Output = i32;
+
+    fn to_gl(self) -> Self::Output {
+        self
+    }
+}
+
+impl ToGl for u32 {
+    type Output = u32;
+
+    fn to_gl(self) -> Self::Output {
+        self
+    }
+}
 
 // Hidden unstable symbols, needed for `posh-derive`.
 #[doc(hidden)]

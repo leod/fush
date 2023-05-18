@@ -35,6 +35,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         SpecializedTypeGenerics::new(parse_quote!(::posh::Sl), ident, &input.generics)?;
     let ty_generics_gl =
         SpecializedTypeGenerics::new(parse_quote!(::posh::Gl), ident, &input.generics)?;
+    let ty_generics_math = SpecializedTypeGenerics::new(parse_quote!(M), ident, &input.generics)?;
 
     let fields = StructFields::new(&input.ident, &input.data)?;
     let field_idents = fields.idents();
@@ -56,6 +57,19 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     Ok(quote! {
         // Implement `Value` and co. for the `Sl` view of the struct.
         #value_impl
+
+        // Implement `ToGl` for all math views of the struct.
+        impl<M: ::posh::MathDom> ::posh::ToGl for #ident #ty_generics_math {
+            type Output = #ident #ty_generics_gl;
+
+            fn to_gl(self) -> Self::Output {
+                Self::Output {
+                    #(
+                        #field_idents: ::posh::ToGl::to_gl(self.#field_idents)
+                    ),*
+                }
+            }
+        }
 
         // Implement `ToSl` for all views of the struct.
         impl #impl_generics ::posh::sl::ToSl for #ident #ty_generics
@@ -192,7 +206,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         }
 
         // Implement `Varying` for the `Sl` view of the struct.
-        // TODO: This can go away once we unify `Value` and `Varying`.
+        // TODO: This can go away IF we unify `Value` and `Varying`.
         unsafe impl ::posh::sl::Varying for #ident #ty_generics_sl {
             fn shader_outputs(&self, path: &str) -> Vec<(
                 ::std::string::String,
@@ -246,7 +260,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         };
 
         // Check that all field types in `Sl` implement `Varying`.
-        // TODO: This can go away once we unify `Value` and `Varying`.
+        // TODO: This can go away IF we unify `Value` and `Varying`.
         const _: fn() = || {
             fn check_field<V: ::posh::sl::Varying>() {}
 

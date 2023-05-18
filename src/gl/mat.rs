@@ -1,7 +1,10 @@
 use bytemuck::{Pod, Zeroable};
 use crevice::std140::AsStd140;
 
-use crate::sl::{self, ToSl};
+use crate::{
+    sl::{self, ToSl},
+    ToGl,
+};
 
 use super::{Vec2, Vec3, Vec4};
 
@@ -72,6 +75,14 @@ macro_rules! impl_convs {
             }
         }
 
+        impl ToGl for $mat {
+            type Output = Self;
+
+            fn to_gl(self) -> Self::Output {
+                self
+            }
+        }
+
         #[cfg(feature = "mint")]
         impl From<$mint> for $mat {
             fn from(value: $mint) -> Self {
@@ -86,6 +97,15 @@ macro_rules! impl_convs {
             }
         }
 
+        #[cfg(feature = "mint")]
+        impl ToGl for $mint {
+            type Output = $mat;
+
+            fn to_gl(self) -> Self::Output {
+                self.into()
+            }
+        }
+
         #[cfg(feature = "glam")]
         impl From<glam::$mat> for $mat {
             fn from(value: glam::$mat) -> Self {
@@ -97,6 +117,15 @@ macro_rules! impl_convs {
         impl From<$mat> for glam::$mat {
             fn from(value: $mat) -> Self {
                 glam::$mat::from_cols($(value.$field.into()),+)
+            }
+        }
+
+        #[cfg(feature = "glam")]
+        impl ToGl for glam::$mat {
+            type Output = $mat;
+
+            fn to_gl(self) -> Self::Output {
+                self.into()
             }
         }
     };
