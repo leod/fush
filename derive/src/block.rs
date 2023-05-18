@@ -145,14 +145,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         unsafe impl ::posh::Block<::posh::Gl> for #ident #ty_generics_gl {
             type Sl = #ident #ty_generics_sl;
             type Gl = #ident #ty_generics_gl;
-
-            fn uniform_input(path: &str) -> Self {
-                unimplemented!()
-            }
-
-            fn vertex_input(path: &str) -> Self {
-                unimplemented!()
-            }
+            type Math<M: ::posh::MathDom> = #ident #ty_generics_math;
         }
 
         // Implement `Block<Sl>` for the `Sl` view of the struct.
@@ -160,6 +153,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
         {
             type Sl = #ident #ty_generics_sl;
             type Gl = #ident #ty_generics_gl;
+            type Math<M: ::posh::MathDom> = #ident #ty_generics_math;
 
             fn uniform_input(path: &str) -> Self {
                 ::posh::internal::value_arg(path)

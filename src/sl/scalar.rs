@@ -14,11 +14,11 @@ macro_rules! scalar_physical {
     (F32) => {
         f32
     };
-    (U32) => {
-        u32
-    };
     (I32) => {
         i32
+    };
+    (U32) => {
+        u32
     };
     (Bool) => {
         bool

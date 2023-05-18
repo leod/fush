@@ -11,3 +11,8 @@ pub use uniform_interface::{
     UniformInterface, UniformInterfaceDom, UniformNonUnit, UniformUnion, UniformVisitor,
 };
 pub use vs_interface::{VertexField, VertexVisitor, VsInterface, VsInterfaceDom};
+
+#[cfg(feature = "glam")]
+pub use math::Glam;
+#[cfg(feature = "mint")]
+pub use math::Mint;

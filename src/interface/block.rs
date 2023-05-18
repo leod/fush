@@ -5,7 +5,7 @@ use sealed::sealed;
 use crate::{
     gl,
     sl::{self, program_def::VertexAttributeDef, ToSl},
-    Gl, Sl, ToGl,
+    Gl, Glam, Sl, ToGl,
 };
 
 use super::math::MathDom;
@@ -229,6 +229,24 @@ pub unsafe trait Block<D: BlockDom>: sl::ToSl {
     }
 }
 
+macro_rules! glam_type {
+    (F32) => {
+        f32
+    };
+    (I32) => {
+        i32
+    };
+    (U32) => {
+        u32
+    };
+    (Bool) => {
+        gl::Bool
+    };
+    ($ty:ident) => {
+        glam::$ty
+    };
+}
+
 macro_rules! impl_block {
     ($gl:ty, $ty:ident) => {
         unsafe impl Block<Gl> for $gl {
@@ -258,6 +276,13 @@ macro_rules! impl_block {
                     offset: 0,
                 }]
             }
+        }
+
+        #[cfg(feature = "glam")]
+        unsafe impl Block<Glam> for glam_type!($ty) {
+            type Gl = $gl;
+            type Sl = sl::$ty;
+            type Math<M: MathDom> = <M as MathDom>::$ty;
         }
     };
 }

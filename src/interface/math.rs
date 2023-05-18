@@ -1,4 +1,5 @@
 use sealed::sealed;
+use type_equals::TypeEquals;
 
 use crate::{
     gl,
@@ -8,7 +9,7 @@ use crate::{
 
 #[sealed]
 pub trait MathDom: BlockDom {
-    type F32: ToGl<Output = f32> + ToSl<Output = sl::F32>;
+    type F32: ToGl<Output = f32> + ToSl<Output = sl::F32> + TypeEquals<Other = <Self as BlockDom>::F32>;
     type I32: ToGl<Output = i32> + ToSl<Output = sl::I32>;
     type U32: ToGl<Output = u32> + ToSl<Output = sl::U32>;
     type Vec2: ToGl<Output = gl::Vec2> + ToSl<Output = sl::Vec2>;
@@ -44,10 +45,10 @@ impl MathDom for Gl {
     type Mat4 = gl::Mat4;
 }
 
-/*#[cfg(feature = "mint")]
+#[cfg(feature = "mint")]
 pub struct Mint;
 
-#[cfg(feature = "mint")]
+/*#[cfg(feature = "mint")]
 #[sealed]
 impl MathDom for Mint {
     type F32 = f32;

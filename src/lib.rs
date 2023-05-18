@@ -9,6 +9,11 @@ pub use interface::{
     UniformNonUnit, UniformUnion, VsInterface, VsInterfaceDom,
 };
 
+#[cfg(feature = "glam")]
+pub use interface::Glam;
+#[cfg(feature = "mint")]
+pub use interface::Mint;
+
 pub use posh_derive::{Block, FsInterface, UniformInterface, VsInterface};
 
 pub use bytemuck;
