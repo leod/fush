@@ -19,7 +19,7 @@ pub fn run_demo<Demo: 'static>(
 
     let window = WindowBuilder::new()
         .with_title(&format!("posh demo: {demo_name}"))
-        .with_inner_size(LogicalSize::new(400.0, 200.0))
+        .with_inner_size(LogicalSize::new(1024.0, 768.0))
         .build(&event_loop)
         .unwrap();
 

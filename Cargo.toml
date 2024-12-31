@@ -26,7 +26,7 @@ default = ["glam", "mint"]
 [dev-dependencies]
 glam = "0.27.0"
 image = "0.24.5"
-nanorand = "0.7.0"
+nanorand = { version = "0.7.0", features = ["getrandom"] }
 simple_logger = "4.1.0"
 instant = "0.1.12"
 
