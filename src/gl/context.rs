@@ -19,8 +19,8 @@ use crate::{
 use super::{
     program::{DrawBuilder, DrawBuilderWithUniforms},
     raw, BufferError, BufferUsage, Caps, ColorImage, ColorTexture2d, ContextError, CreateError,
-    DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, Program, ProgramError,
-    TextureError, UniformBuffer, VertexBuffer,
+    DepthImage, DepthTexture2d, DrawError, Element, ElementBuffer, FrameTrace, Program,
+    ProgramError, TextureError, UniformBuffer, VertexBuffer,
 };
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -56,6 +56,7 @@ impl ProgramCache {
         let raw = match self.0.entry(key) {
             hash_map::Entry::Occupied(entry) => entry.get().clone(),
             hash_map::Entry::Vacant(entry) => {
+                let name = program_name(&vertex_shader, &fragment_shader);
                 let program_def = transpile_to_program_def::<U, VSig, VFunc, FSig, FFunc>(
                     vertex_shader,
                     fragment_shader,
@@ -72,7 +73,7 @@ impl ProgramCache {
                     program_def.fragment_shader_source
                 );
 
-                let raw = raw.create_program(program_def)?;
+                let raw = raw.create_program(name, program_def)?;
 
                 entry.insert(Rc::new(raw)).clone()
             }
@@ -230,13 +231,13 @@ impl Context {
         FSig: FsSig<C = (), W = VSig::W>,
         FFunc: FsFunc<FSig>,
     {
-        let program_def =
-            transpile_to_program_def::<U, VSig, VFunc, FSig, FFunc>(vertex_shader, fragment_shader);
+        let name = program_name(&vertex_shader, &fragment_shader);
+        let program_def = transpile_to_program_def::<U, _, _, _, _>(vertex_shader, fragment_shader);
 
         log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
         log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
 
-        let raw = self.raw.create_program(program_def)?;
+        let raw = self.raw.create_program(name, program_def)?;
 
         Ok(Program::unchecked_from_raw(Rc::new(raw)))
     }
@@ -254,7 +255,8 @@ impl Context {
         FSig: FsSig<C = VSig::C, W = VSig::W>,
         FFunc: FsFunc<FSig>,
     {
-        let program_def = transpile_to_program_def_with_consts::<U, VSig, VFunc, FSig, FFunc>(
+        let name = program_name(&vertex_shader, &fragment_shader);
+        let program_def = transpile_to_program_def_with_consts::<U, _, _, _, _>(
             consts,
             vertex_shader,
             fragment_shader,
@@ -263,7 +265,7 @@ impl Context {
         log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
         log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
 
-        let raw = self.raw.create_program(program_def)?;
+        let raw = self.raw.create_program(name, program_def)?;
 
         Ok(Program::unchecked_from_raw(Rc::new(raw)))
     }
@@ -298,4 +300,20 @@ impl Context {
     pub fn finish(&self) {
         self.raw.finish();
     }
+
+    pub fn tracing_enable(&self) {
+        self.raw.tracing_enable();
+    }
+
+    pub fn tracing_disable(&self) {
+        self.raw.tracing_disable();
+    }
+
+    pub fn tracing_start_frame(&self) -> Option<FrameTrace> {
+        self.raw.tracing_start_frame()
+    }
+}
+
+pub fn program_name<VFunc, FFunc>(_: &VFunc, _: &FFunc) -> String {
+    format!("{} {}", type_name::<VFunc>(), type_name::<FFunc>())
 }

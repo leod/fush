@@ -188,6 +188,8 @@ impl Demo {
         let light_depth_image =
             gl::DepthImage::u24_depth_u8_stencil_zero([DEPTH_MAP_SIZE, DEPTH_MAP_SIZE]);
 
+        gl.tracing_enable();
+
         Ok(Demo {
             gl: gl.clone(),
 

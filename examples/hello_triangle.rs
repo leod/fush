@@ -51,6 +51,8 @@ impl Demo {
             [0.5, -0.5].into(),
         ];
 
+        gl.tracing_enable();
+
         Ok(Self {
             program: gl.create_program(vertex_shader, fragment_shader)?,
             globals: gl.create_uniform_buffer(Default::default(), StreamDraw)?,

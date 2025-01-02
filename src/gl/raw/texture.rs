@@ -122,7 +122,7 @@ impl Texture2d {
                 height,
                 image.internal_format.to_format().to_gl(),
                 image.ty.to_gl(),
-                glow::PixelUnpackData::Slice(slice),
+                glow::PixelUnpackData::Slice(Some(slice)),
             )
         };
         unsafe { gl.bind_texture(glow::TEXTURE_2D, None) };
@@ -217,7 +217,7 @@ impl Texture2d {
                 height,
                 image.internal_format.to_format().to_gl(),
                 image.ty.to_gl(),
-                glow::PixelUnpackData::Slice(slice),
+                glow::PixelUnpackData::Slice(Some(slice)),
             )
         };
         unsafe { gl.bind_texture(glow::TEXTURE_2D, None) };

@@ -2,7 +2,10 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use glow::HasContext;
 
-use crate::sl::program_def::{ProgramDef, UniformSamplerDef};
+use crate::{
+    gl::raw::{context::tracing_start_draw_call, DrawCallInfo},
+    sl::program_def::{ProgramDef, UniformSamplerDef},
+};
 
 use super::{
     context::ContextShared, error::check_gl_error, vertex_layout::VertexAttributeLayout, Buffer,
@@ -11,12 +14,17 @@ use super::{
 
 pub struct Program {
     ctx: Rc<ContextShared>,
+    name: String,
     def: ProgramDef,
     id: glow::Program,
 }
 
 impl Program {
-    pub(super) fn new(ctx: Rc<ContextShared>, def: ProgramDef) -> Result<Self, ProgramError> {
+    pub(super) fn new(
+        ctx: Rc<ContextShared>,
+        name: String,
+        def: ProgramDef,
+    ) -> Result<Self, ProgramError> {
         validate_program_def(&def)?;
 
         let gl = ctx.gl();
@@ -26,6 +34,7 @@ impl Program {
         let id = unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?;
         let program = Program {
             ctx: ctx.clone(),
+            name,
             def,
             id,
         };
@@ -180,6 +189,22 @@ impl Program {
 
         framebuffer.bind(&self.ctx)?;
 
+        let timer_query = tracing_start_draw_call(&self.ctx, || DrawCallInfo {
+            name: self.name.clone(),
+            vertex_data_lens: vertex_spec
+                .vertex_data
+                .iter()
+                .map(|binding| binding.buffer.len())
+                .collect(),
+            element_data_len: vertex_spec
+                .element_data
+                .as_ref()
+                .map(|buffer| buffer.0.len()),
+            mode: vertex_spec.mode,
+            index_range: vertex_spec.index_range.clone(),
+            num_instances: vertex_spec.num_instances,
+        });
+
         let framebuffer_size = framebuffer.size(&self.ctx);
 
         // `set_draw_params` also clears the screen, so it must come after
@@ -242,6 +267,10 @@ impl Program {
 
         // TODO: Remove overly conservative unbinding.
         framebuffer.unbind(&self.ctx);
+
+        if let Some(timer_query) = timer_query {
+            timer_query.stop();
+        }
 
         #[cfg(debug_assertions)]
         check_gl_error(gl, "after draw").map_err(DrawError::Error)?;

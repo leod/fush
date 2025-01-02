@@ -1,4 +1,7 @@
-use std::{cell::Cell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 
 use glow::HasContext;
 
@@ -7,7 +10,10 @@ use crate::{
     sl::program_def::ProgramDef,
 };
 
-use super::{Buffer, Caps, ContextError, DrawParams, Image, Program, Texture2d, TextureError};
+use super::{
+    disjoint_timer_query::DisjointTimerQuery, tracing::Tracing, Buffer, Caps, ContextError,
+    DrawCallInfo, DrawParams, FrameTrace, Image, Program, Texture2d, TextureError,
+};
 
 pub(super) struct ContextShared {
     gl: glow::Context,
@@ -15,6 +21,7 @@ pub(super) struct ContextShared {
     draw_params: Cell<DrawParams>,
     draw_fbo: glow::Framebuffer,
     default_framebuffer_size: Cell<[u32; 2]>,
+    tracing: RefCell<Option<Tracing>>,
 }
 
 pub struct Context {
@@ -83,6 +90,7 @@ impl Context {
             draw_params: Cell::new(DrawParams::new()),
             draw_fbo,
             default_framebuffer_size: Cell::new(default_framebuffer_size),
+            tracing: Default::default(),
         });
 
         Ok(Self { shared })
@@ -109,8 +117,8 @@ impl Context {
         Texture2d::new_with_mipmap(self.shared.clone(), image)
     }
 
-    pub fn create_program(&self, def: ProgramDef) -> Result<Program, ProgramError> {
-        Program::new(self.shared.clone(), def)
+    pub fn create_program(&self, name: String, def: ProgramDef) -> Result<Program, ProgramError> {
+        Program::new(self.shared.clone(), name, def)
     }
 
     pub fn finish(&self) {
@@ -124,4 +132,33 @@ impl Context {
     pub fn set_default_framebuffer_size(&self, size: [u32; 2]) {
         self.shared.default_framebuffer_size.set(size);
     }
+
+    pub fn tracing_enable(&self) {
+        *self.shared.tracing.borrow_mut() = Some(Default::default())
+    }
+
+    pub fn tracing_disable(&self) {
+        *self.shared.tracing.borrow_mut() = None;
+    }
+
+    pub fn tracing_start_frame(&self) -> Option<FrameTrace> {
+        let mut tracing = self.shared.tracing.borrow_mut();
+
+        let result = tracing
+            .as_mut()
+            .and_then(move |tracing| tracing.start_frame());
+
+        result
+    }
+}
+
+pub(super) fn tracing_start_draw_call(
+    ctx: &Rc<ContextShared>,
+    info: impl Fn() -> DrawCallInfo,
+) -> Option<Rc<DisjointTimerQuery>> {
+    let mut tracing = ctx.tracing.borrow_mut();
+
+    tracing.as_mut().and_then(|tracing| {
+        tracing.start_draw_call(info(), || DisjointTimerQuery::new(ctx.clone()).ok())
+    })
 }

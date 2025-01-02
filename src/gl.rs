@@ -29,10 +29,10 @@ pub use program::{
 };
 pub use raw::{
     BlendEquation, BlendFunc, Blending, BufferError, BufferUsage, Caps, Comparison, ContextError,
-    CreateError, CullFace, DrawError, DrawParams, ElementType, FramebufferError, ImageFormat,
-    ImageInternalFormat, PrimitiveMode, ProgramError, ProgramValidationError, Rect,
-    Sampler2dParams, SamplerMagFilter, SamplerMinFilter, SamplerWrap, StencilOp, StencilOps,
-    StencilTest, TextureError, VertexArrayError,
+    CreateError, CullFace, DrawCallInfo, DrawCallTrace, DrawError, DrawParams, ElementType,
+    FrameTrace, FramebufferError, ImageFormat, ImageInternalFormat, PrimitiveMode, ProgramError,
+    ProgramValidationError, Rect, Sampler2dParams, SamplerMagFilter, SamplerMinFilter, SamplerWrap,
+    StencilOp, StencilOps, StencilTest, TextureError, VertexArrayError,
 };
 pub use texture::{ColorSampler2d, ColorTexture2d, ComparisonSampler2d, DepthTexture2d};
 pub use uniform_buffer::{UniformBuffer, UniformBufferBinding};
