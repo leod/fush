@@ -211,6 +211,9 @@ impl Demo {
     }
 
     pub fn draw(&mut self) -> Result<(), gl::DrawError> {
+        let frame_trace = self.gl.tracing_start_frame();
+        log::info!("{frame_trace:#?}");
+
         let dt = Instant::now().duration_since(self.start_time).as_secs_f32();
 
         let light_x = (dt * 0.5).sin() * 20.0;

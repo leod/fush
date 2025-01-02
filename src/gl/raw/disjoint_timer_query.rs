@@ -42,14 +42,21 @@ impl DisjointTimerQuery {
         }
     }
 
-    pub fn get(&self) -> Option<Duration> {
+    pub fn available(&self) -> bool {
         let gl = self.ctx.gl();
 
         let available =
             unsafe { gl.get_query_parameter_u32(self.id, glow::QUERY_RESULT_AVAILABLE) };
+
+        available != 0
+    }
+
+    pub fn get(&self) -> Option<Duration> {
+        let gl = self.ctx.gl();
+
         let disjoint = unsafe { gl.get_parameter_bool(0x8FBB) };
 
-        if available != 0 && !disjoint {
+        if self.available() && !disjoint {
             // FIXME: The spec
             // (<https://registry.khronos.org/webgl/extensions/EXT_disjoint_timer_query_webgl2/>)
             // seems to say that the query result should be an `u64`, which

@@ -31,27 +31,43 @@ struct DrawCall {
 #[derive(Default)]
 pub struct Tracing {
     query_cache: Vec<Rc<DisjointTimerQuery>>,
+    last_draw_calls: Vec<DrawCall>,
     draw_calls: Vec<DrawCall>,
 }
 
 impl Tracing {
     pub fn start_frame(&mut self) -> Option<FrameTrace> {
-        let draw_calls = self
-            .draw_calls
-            .iter()
-            .map(|draw_call| DrawCallTrace {
-                info: draw_call.info.clone(),
-                duration: draw_call.query.as_ref().and_then(|query| query.get()),
-            })
-            .collect();
+        let last_available = self.last_draw_calls.iter().all(|draw_call| {
+            draw_call
+                .query
+                .as_ref()
+                .map_or(true, |query| query.available())
+        });
 
-        self.query_cache.extend(
-            self.draw_calls
-                .drain(..)
-                .filter_map(|draw_call| draw_call.query),
-        );
+        if last_available {
+            let draw_calls = self
+                .last_draw_calls
+                .iter()
+                .map(|draw_call| DrawCallTrace {
+                    info: draw_call.info.clone(),
+                    duration: draw_call.query.as_ref().and_then(|query| query.get()),
+                })
+                .collect();
 
-        Some(FrameTrace { draw_calls })
+            self.query_cache.extend(
+                self.last_draw_calls
+                    .drain(..)
+                    .filter_map(|draw_call| draw_call.query),
+            );
+
+            std::mem::swap(&mut self.draw_calls, &mut self.last_draw_calls);
+
+            Some(FrameTrace { draw_calls })
+        } else {
+            self.draw_calls.clear();
+
+            None
+        }
     }
 
     pub fn start_draw_call(
