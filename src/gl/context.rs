@@ -56,7 +56,6 @@ impl ProgramCache {
         let raw = match self.0.entry(key) {
             hash_map::Entry::Occupied(entry) => entry.get().clone(),
             hash_map::Entry::Vacant(entry) => {
-                let name = program_name(&vertex_shader, &fragment_shader);
                 let program_def = transpile_to_program_def::<U, VSig, VFunc, FSig, FFunc>(
                     vertex_shader,
                     fragment_shader,
@@ -73,7 +72,11 @@ impl ProgramCache {
                     program_def.fragment_shader_source
                 );
 
-                let raw = raw.create_program(name, program_def)?;
+                let raw = raw.create_program(
+                    type_name::<VFunc>().to_string(),
+                    type_name::<FFunc>().to_string(),
+                    program_def,
+                )?;
 
                 entry.insert(Rc::new(raw)).clone()
             }
@@ -231,13 +234,16 @@ impl Context {
         FSig: FsSig<C = (), W = VSig::W>,
         FFunc: FsFunc<FSig>,
     {
-        let name = program_name(&vertex_shader, &fragment_shader);
         let program_def = transpile_to_program_def::<U, _, _, _, _>(vertex_shader, fragment_shader);
 
         log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
         log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
 
-        let raw = self.raw.create_program(name, program_def)?;
+        let raw = self.raw.create_program(
+            type_name::<VFunc>().to_string(),
+            type_name::<FFunc>().to_string(),
+            program_def,
+        )?;
 
         Ok(Program::unchecked_from_raw(Rc::new(raw)))
     }
@@ -255,7 +261,6 @@ impl Context {
         FSig: FsSig<C = VSig::C, W = VSig::W>,
         FFunc: FsFunc<FSig>,
     {
-        let name = program_name(&vertex_shader, &fragment_shader);
         let program_def = transpile_to_program_def_with_consts::<U, _, _, _, _>(
             consts,
             vertex_shader,
@@ -265,7 +270,11 @@ impl Context {
         log::info!("Vertex shader:\n{}", program_def.vertex_shader_source);
         log::info!("Fragment shader:\n{}", program_def.fragment_shader_source);
 
-        let raw = self.raw.create_program(name, program_def)?;
+        let raw = self.raw.create_program(
+            type_name::<VFunc>().to_string(),
+            type_name::<FFunc>().to_string(),
+            program_def,
+        )?;
 
         Ok(Program::unchecked_from_raw(Rc::new(raw)))
     }

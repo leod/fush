@@ -4,7 +4,8 @@ use super::{disjoint_timer_query::DisjointTimerQuery, PrimitiveMode};
 
 #[derive(Debug, Clone)]
 pub struct DrawCallInfo {
-    pub name: String,
+    pub vertex_shader_name: String,
+    pub fragment_shader_name: String,
     pub vertex_data_lens: Vec<usize>,
     pub element_data_len: Option<usize>,
     pub mode: PrimitiveMode,

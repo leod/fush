@@ -117,8 +117,18 @@ impl Context {
         Texture2d::new_with_mipmap(self.shared.clone(), image)
     }
 
-    pub fn create_program(&self, name: String, def: ProgramDef) -> Result<Program, ProgramError> {
-        Program::new(self.shared.clone(), name, def)
+    pub fn create_program(
+        &self,
+        vertex_shader_name: String,
+        fragment_shader_name: String,
+        def: ProgramDef,
+    ) -> Result<Program, ProgramError> {
+        Program::new(
+            self.shared.clone(),
+            vertex_shader_name,
+            fragment_shader_name,
+            def,
+        )
     }
 
     pub fn finish(&self) {

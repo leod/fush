@@ -14,7 +14,8 @@ use super::{
 
 pub struct Program {
     ctx: Rc<ContextShared>,
-    name: String,
+    vertex_shader_name: String,
+    fragment_shader_name: String,
     def: ProgramDef,
     id: glow::Program,
 }
@@ -22,7 +23,8 @@ pub struct Program {
 impl Program {
     pub(super) fn new(
         ctx: Rc<ContextShared>,
-        name: String,
+        vertex_shader_name: String,
+        fragment_shader_name: String,
         def: ProgramDef,
     ) -> Result<Self, ProgramError> {
         validate_program_def(&def)?;
@@ -34,7 +36,8 @@ impl Program {
         let id = unsafe { gl.create_program() }.map_err(ProgramError::ProgramCreation)?;
         let program = Program {
             ctx: ctx.clone(),
-            name,
+            vertex_shader_name,
+            fragment_shader_name,
             def,
             id,
         };
@@ -190,7 +193,8 @@ impl Program {
         framebuffer.bind(&self.ctx)?;
 
         let timer_query = tracing_start_draw_call(&self.ctx, || DrawCallInfo {
-            name: self.name.clone(),
+            vertex_shader_name: self.vertex_shader_name.clone(),
+            fragment_shader_name: self.fragment_shader_name.clone(),
             vertex_data_lens: vertex_spec
                 .vertex_data
                 .iter()
